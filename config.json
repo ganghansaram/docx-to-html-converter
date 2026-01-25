@@ -1,0 +1,22 @@
+{
+  "heading_styles": {
+    "ko": ["제목 1", "제목 2", "제목 3"],
+    "en": ["Heading 1", "Heading 2", "Heading 3", "Title"]
+  },
+  "special_blocks": {
+    "note": ["NOTE", "참고", "비고"],
+    "caution": ["CAUTION", "주의"],
+    "warning": ["WARNING", "경고"]
+  },
+  "options": {
+    "remove_headers_footers": true,
+    "extract_images": true,
+    "image_folder": "images",
+    "remove_empty_paragraphs": true,
+    "convert_smart_quotes": true
+  },
+  "output": {
+    "encoding": "utf-8",
+    "indent": true
+  }
+}
