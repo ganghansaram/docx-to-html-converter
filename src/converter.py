@@ -74,7 +74,6 @@ class DocxConverter:
             "options": {
                 "remove_headers_footers": True,
                 "extract_images": True,
-                "image_folder": "images",
                 "remove_empty_paragraphs": True,
                 "convert_smart_quotes": True
             },
@@ -128,8 +127,7 @@ class DocxConverter:
             # 이미지 추출
             image_map = {}
             if merged_options.get('extract_images', True):
-                image_folder = merged_options.get('image_folder', 'images')
-                image_dir = get_image_dir(output_path, image_folder)
+                image_dir = get_image_dir(output_path)
                 image_map = self._process_images(doc, image_dir, output_path)
                 result.stats['images'] = len(image_map)
 

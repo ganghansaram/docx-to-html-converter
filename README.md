@@ -25,6 +25,23 @@ docx-to-html-converter/
     └── gui.py
 ```
 
+## 출력 구조
+
+변환된 HTML과 이미지는 문서별로 독립된 폴더에 저장됩니다.
+
+```
+output/
+├── introduction.html
+├── introduction_images/
+│   ├── image_abc123.png
+│   └── image_def456.png
+├── chapter01.html
+└── chapter01_images/
+    └── image_789ghi.png
+```
+
+**규칙**: `{문서명}_images/` 형식으로 HTML 파일과 1:1 매핑됩니다.
+
 ## 사용 방법
 
 1. `converter.exe` 실행

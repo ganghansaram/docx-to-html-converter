@@ -37,7 +37,6 @@
   "options": {
     "remove_headers_footers": true,
     "extract_images": true,
-    "image_folder": "images",
     "remove_empty_paragraphs": true,
     "convert_smart_quotes": true
   },

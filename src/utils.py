@@ -135,19 +135,18 @@ def get_output_path(input_path, output_dir=None, suffix='.html'):
         return input_path.with_suffix(suffix)
 
 
-def get_image_dir(output_path, image_folder='images'):
+def get_image_dir(output_path):
     """
-    이미지 저장 디렉토리 경로 생성
+    이미지 저장 디렉토리 경로 생성 (문서명 기반)
 
     Args:
         output_path: HTML 출력 파일 경로
-        image_folder: 이미지 폴더 이름
 
     Returns:
-        Path: 이미지 디렉토리 경로
+        Path: 이미지 디렉토리 경로 ({문서명}_images 형식)
     """
     output_path = Path(output_path)
-    return output_path.parent / image_folder
+    return output_path.parent / f"{output_path.stem}_images"
 
 
 def find_docx_files(directory, recursive=True):
