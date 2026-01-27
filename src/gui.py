@@ -17,12 +17,29 @@ from utils import find_docx_files, BatchResult
 class ConverterApp:
     """변환기 GUI 애플리케이션"""
 
+    # 색상 테마
+    COLORS = {
+        'bg': '#f5f5f5',
+        'frame_bg': '#ffffff',
+        'primary': '#2563eb',
+        'primary_hover': '#1d4ed8',
+        'success': '#16a34a',
+        'danger': '#dc2626',
+        'text': '#1f2937',
+        'text_secondary': '#6b7280',
+        'border': '#e5e7eb',
+    }
+
     def __init__(self):
         self.root = tk.Tk()
         self.root.title("DOCX to HTML Converter")
-        self.root.geometry("700x600")
+        self.root.geometry("750x700")
         self.root.resizable(True, True)
-        self.root.minsize(600, 500)
+        self.root.minsize(650, 600)
+        self.root.configure(bg=self.COLORS['bg'])
+
+        # 스타일 설정
+        self._setup_styles()
 
         # 변환기 인스턴스
         self.converter = DocxConverter()
@@ -50,75 +67,226 @@ class ConverterApp:
         self._create_widgets()
         self._setup_progress_checker()
 
+    def _setup_styles(self):
+        """ttk 스타일 설정"""
+        style = ttk.Style()
+
+        # 테마 설정 (clam이 가장 커스터마이징 하기 좋음)
+        style.theme_use('clam')
+
+        # 기본 프레임
+        style.configure(
+            'TFrame',
+            background=self.COLORS['bg']
+        )
+
+        # 카드 스타일 프레임
+        style.configure(
+            'Card.TFrame',
+            background=self.COLORS['frame_bg'],
+            relief='flat'
+        )
+
+        # 레이블
+        style.configure(
+            'TLabel',
+            background=self.COLORS['bg'],
+            foreground=self.COLORS['text'],
+            font=('맑은 고딕', 10)
+        )
+
+        # 제목 레이블
+        style.configure(
+            'Title.TLabel',
+            background=self.COLORS['bg'],
+            foreground=self.COLORS['primary'],
+            font=('맑은 고딕', 18, 'bold')
+        )
+
+        # 부제목 레이블
+        style.configure(
+            'Subtitle.TLabel',
+            background=self.COLORS['bg'],
+            foreground=self.COLORS['text_secondary'],
+            font=('맑은 고딕', 9)
+        )
+
+        # LabelFrame
+        style.configure(
+            'TLabelframe',
+            background=self.COLORS['frame_bg'],
+            relief='solid',
+            borderwidth=1,
+            bordercolor=self.COLORS['border']
+        )
+        style.configure(
+            'TLabelframe.Label',
+            background=self.COLORS['frame_bg'],
+            foreground=self.COLORS['text'],
+            font=('맑은 고딕', 10, 'bold')
+        )
+
+        # 기본 버튼
+        style.configure(
+            'TButton',
+            font=('맑은 고딕', 10),
+            padding=(15, 8),
+            relief='flat'
+        )
+        style.map('TButton',
+            background=[('active', self.COLORS['border']), ('!active', self.COLORS['frame_bg'])],
+            relief=[('pressed', 'flat'), ('!pressed', 'flat')]
+        )
+
+        # 주요 버튼 (변환 실행)
+        style.configure(
+            'Primary.TButton',
+            font=('맑은 고딕', 11, 'bold'),
+            padding=(30, 12),
+            background=self.COLORS['primary'],
+            foreground='white'
+        )
+        style.map('Primary.TButton',
+            background=[('active', self.COLORS['primary_hover']), ('!active', self.COLORS['primary'])],
+            foreground=[('active', 'white'), ('!active', 'white')]
+        )
+
+        # 위험 버튼 (취소)
+        style.configure(
+            'Danger.TButton',
+            font=('맑은 고딕', 11),
+            padding=(30, 12),
+            background=self.COLORS['danger'],
+            foreground='white'
+        )
+        style.map('Danger.TButton',
+            background=[('active', '#b91c1c'), ('!active', self.COLORS['danger'])],
+            foreground=[('active', 'white'), ('!active', 'white')]
+        )
+
+        # 입력 필드
+        style.configure(
+            'TEntry',
+            font=('맑은 고딕', 10),
+            padding=8,
+            relief='solid',
+            borderwidth=1
+        )
+
+        # 체크버튼
+        style.configure(
+            'TCheckbutton',
+            background=self.COLORS['frame_bg'],
+            foreground=self.COLORS['text'],
+            font=('맑은 고딕', 10)
+        )
+
+        # 라디오버튼
+        style.configure(
+            'TRadiobutton',
+            background=self.COLORS['frame_bg'],
+            foreground=self.COLORS['text'],
+            font=('맑은 고딕', 10)
+        )
+
+        # 프로그레스바
+        style.configure(
+            'TProgressbar',
+            background=self.COLORS['primary'],
+            troughcolor=self.COLORS['border'],
+            borderwidth=0,
+            lightcolor=self.COLORS['primary'],
+            darkcolor=self.COLORS['primary']
+        )
+
+        # 성공 프로그레스바
+        style.configure(
+            'green.Horizontal.TProgressbar',
+            background=self.COLORS['success'],
+            troughcolor=self.COLORS['border']
+        )
+
     def _create_widgets(self):
         """GUI 위젯 생성"""
         # 메인 프레임
-        main_frame = ttk.Frame(self.root, padding="15")
+        main_frame = ttk.Frame(self.root, padding="20")
         main_frame.pack(fill=tk.BOTH, expand=True)
 
-        # 제목
+        # 헤더 영역
+        header_frame = ttk.Frame(main_frame)
+        header_frame.pack(fill=tk.X, pady=(0, 20))
+
         title_label = ttk.Label(
-            main_frame,
-            text="Word -> HTML 변환기",
-            font=("맑은 고딕", 16, "bold")
+            header_frame,
+            text="DOCX → HTML Converter",
+            style='Title.TLabel'
         )
-        title_label.pack(pady=(0, 15))
+        title_label.pack(anchor=tk.W)
+
+        subtitle_label = ttk.Label(
+            header_frame,
+            text="Word 문서를 웹북용 HTML로 변환합니다",
+            style='Subtitle.TLabel'
+        )
+        subtitle_label.pack(anchor=tk.W, pady=(5, 0))
 
         # 모드 선택
-        mode_frame = ttk.LabelFrame(main_frame, text="변환 모드", padding="10")
-        mode_frame.pack(fill=tk.X, pady=(0, 10))
+        mode_frame = ttk.LabelFrame(main_frame, text=" 변환 모드 ", padding="15")
+        mode_frame.pack(fill=tk.X, pady=(0, 15))
 
         ttk.Radiobutton(
             mode_frame, text="단일 파일 변환",
             variable=self.batch_mode, value=False,
             command=self._toggle_mode
-        ).pack(side=tk.LEFT, padx=(0, 20))
+        ).pack(side=tk.LEFT, padx=(0, 30))
 
         ttk.Radiobutton(
-            mode_frame, text="배치 변환 (폴더)",
+            mode_frame, text="배치 변환 (폴더 전체)",
             variable=self.batch_mode, value=True,
             command=self._toggle_mode
         ).pack(side=tk.LEFT)
 
         # === 단일 파일 모드 프레임 ===
         self.single_frame = ttk.Frame(main_frame)
-        self.single_frame.pack(fill=tk.X, pady=(0, 10))
+        self.single_frame.pack(fill=tk.X, pady=(0, 15))
 
         # 입력 파일 선택
-        input_frame = ttk.LabelFrame(self.single_frame, text="입력 파일", padding="10")
+        input_frame = ttk.LabelFrame(self.single_frame, text=" 입력 파일 ", padding="15")
         input_frame.pack(fill=tk.X, pady=(0, 10))
 
-        ttk.Entry(input_frame, textvariable=self.input_path, width=60).pack(side=tk.LEFT, padx=(0, 10), fill=tk.X, expand=True)
-        ttk.Button(input_frame, text="찾아보기", command=self._browse_input).pack(side=tk.LEFT)
+        input_entry = ttk.Entry(input_frame, textvariable=self.input_path, font=('맑은 고딕', 10))
+        input_entry.pack(side=tk.LEFT, padx=(0, 10), fill=tk.X, expand=True)
+        ttk.Button(input_frame, text="파일 선택", command=self._browse_input).pack(side=tk.LEFT)
 
         # 출력 위치 선택
-        output_frame = ttk.LabelFrame(self.single_frame, text="출력 위치", padding="10")
-        output_frame.pack(fill=tk.X, pady=(0, 10))
+        output_frame = ttk.LabelFrame(self.single_frame, text=" 출력 위치 ", padding="15")
+        output_frame.pack(fill=tk.X)
 
-        ttk.Entry(output_frame, textvariable=self.output_path, width=60).pack(side=tk.LEFT, padx=(0, 10), fill=tk.X, expand=True)
-        ttk.Button(output_frame, text="찾아보기", command=self._browse_output).pack(side=tk.LEFT)
+        output_entry = ttk.Entry(output_frame, textvariable=self.output_path, font=('맑은 고딕', 10))
+        output_entry.pack(side=tk.LEFT, padx=(0, 10), fill=tk.X, expand=True)
+        ttk.Button(output_frame, text="위치 선택", command=self._browse_output).pack(side=tk.LEFT)
 
         # === 배치 모드 프레임 ===
         self.batch_frame = ttk.Frame(main_frame)
         # 초기에는 숨김
 
         # 입력 폴더 선택
-        input_folder_frame = ttk.LabelFrame(self.batch_frame, text="입력 폴더", padding="10")
+        input_folder_frame = ttk.LabelFrame(self.batch_frame, text=" 입력 폴더 ", padding="15")
         input_folder_frame.pack(fill=tk.X, pady=(0, 10))
 
-        ttk.Entry(input_folder_frame, textvariable=self.input_folder, width=60).pack(side=tk.LEFT, padx=(0, 10), fill=tk.X, expand=True)
-        ttk.Button(input_folder_frame, text="찾아보기", command=self._browse_input_folder).pack(side=tk.LEFT)
+        ttk.Entry(input_folder_frame, textvariable=self.input_folder, font=('맑은 고딕', 10)).pack(side=tk.LEFT, padx=(0, 10), fill=tk.X, expand=True)
+        ttk.Button(input_folder_frame, text="폴더 선택", command=self._browse_input_folder).pack(side=tk.LEFT)
 
         # 출력 폴더 선택
-        output_folder_frame = ttk.LabelFrame(self.batch_frame, text="출력 폴더", padding="10")
+        output_folder_frame = ttk.LabelFrame(self.batch_frame, text=" 출력 폴더 ", padding="15")
         output_folder_frame.pack(fill=tk.X, pady=(0, 10))
 
-        ttk.Entry(output_folder_frame, textvariable=self.output_folder, width=60).pack(side=tk.LEFT, padx=(0, 10), fill=tk.X, expand=True)
-        ttk.Button(output_folder_frame, text="찾아보기", command=self._browse_output_folder).pack(side=tk.LEFT)
+        ttk.Entry(output_folder_frame, textvariable=self.output_folder, font=('맑은 고딕', 10)).pack(side=tk.LEFT, padx=(0, 10), fill=tk.X, expand=True)
+        ttk.Button(output_folder_frame, text="폴더 선택", command=self._browse_output_folder).pack(side=tk.LEFT)
 
         # 배치 옵션
-        batch_options_frame = ttk.Frame(self.batch_frame)
-        batch_options_frame.pack(fill=tk.X, pady=(0, 10))
+        batch_options_frame = ttk.LabelFrame(self.batch_frame, text=" 배치 옵션 ", padding="15")
+        batch_options_frame.pack(fill=tk.X)
 
         ttk.Checkbutton(
             batch_options_frame,
@@ -130,17 +298,17 @@ class ConverterApp:
             batch_options_frame,
             text="파일 목록 미리보기",
             command=self._preview_files
-        ).pack(side=tk.LEFT, padx=(20, 0))
+        ).pack(side=tk.RIGHT)
 
         # === 공통 옵션 ===
-        options_frame = ttk.LabelFrame(main_frame, text="옵션", padding="10")
-        options_frame.pack(fill=tk.X, pady=(0, 10))
+        options_frame = ttk.LabelFrame(main_frame, text=" 변환 옵션 ", padding="15")
+        options_frame.pack(fill=tk.X, pady=(0, 15))
 
         ttk.Checkbutton(
             options_frame,
             text="이미지 추출",
             variable=self.extract_images
-        ).pack(side=tk.LEFT, padx=(0, 20))
+        ).pack(side=tk.LEFT, padx=(0, 30))
 
         ttk.Checkbutton(
             options_frame,
@@ -150,51 +318,70 @@ class ConverterApp:
 
         # 버튼 프레임
         button_frame = ttk.Frame(main_frame)
-        button_frame.pack(fill=tk.X, pady=(10, 10))
+        button_frame.pack(fill=tk.X, pady=(10, 20))
+
+        # 버튼들을 담을 내부 프레임 (중앙 정렬용)
+        button_inner = ttk.Frame(button_frame)
+        button_inner.pack(anchor=tk.CENTER)
 
         self.convert_btn = ttk.Button(
-            button_frame,
-            text="변환 실행",
-            command=self._start_convert
+            button_inner,
+            text="▶  변환 실행",
+            style='Primary.TButton',
+            command=self._start_convert,
+            width=15
         )
-        self.convert_btn.pack(side=tk.LEFT, padx=(0, 10))
+        self.convert_btn.pack(side=tk.LEFT, padx=(0, 15))
 
         self.cancel_btn = ttk.Button(
-            button_frame,
-            text="취소",
+            button_inner,
+            text="■  취소",
+            style='Danger.TButton',
             command=self._cancel_convert,
-            state=tk.DISABLED
+            state=tk.DISABLED,
+            width=15
         )
         self.cancel_btn.pack(side=tk.LEFT)
 
         # 진행률 프레임
-        progress_frame = ttk.LabelFrame(main_frame, text="진행 상황", padding="10")
-        progress_frame.pack(fill=tk.X, pady=(0, 10))
+        progress_frame = ttk.LabelFrame(main_frame, text=" 진행 상황 ", padding="15")
+        progress_frame.pack(fill=tk.X, pady=(0, 15))
 
         # 현재 파일 진행률
-        self.current_file_label = ttk.Label(progress_frame, text="대기 중...")
+        self.current_file_label = ttk.Label(progress_frame, text="대기 중...", foreground=self.COLORS['text_secondary'])
         self.current_file_label.pack(anchor=tk.W)
 
-        self.current_progress = ttk.Progressbar(progress_frame, mode='indeterminate')
-        self.current_progress.pack(fill=tk.X, pady=(5, 10))
+        self.current_progress = ttk.Progressbar(progress_frame, mode='indeterminate', length=400)
+        self.current_progress.pack(fill=tk.X, pady=(8, 12))
 
         # 전체 진행률 (배치 모드용)
-        self.total_progress_label = ttk.Label(progress_frame, text="전체: 0/0")
+        self.total_progress_label = ttk.Label(progress_frame, text="전체: 0/0", foreground=self.COLORS['text_secondary'])
         self.total_progress_label.pack(anchor=tk.W)
 
-        self.total_progress = ttk.Progressbar(progress_frame, mode='determinate')
-        self.total_progress.pack(fill=tk.X, pady=(5, 0))
+        self.total_progress = ttk.Progressbar(progress_frame, mode='determinate', length=400, style='green.Horizontal.TProgressbar')
+        self.total_progress.pack(fill=tk.X, pady=(8, 0))
 
         # 로그 영역
-        log_frame = ttk.LabelFrame(main_frame, text="로그", padding="10")
-        log_frame.pack(fill=tk.BOTH, expand=True, pady=(0, 10))
+        log_frame = ttk.LabelFrame(main_frame, text=" 로그 ", padding="15")
+        log_frame.pack(fill=tk.BOTH, expand=True, pady=(0, 15))
 
         # 스크롤바 추가
         log_scroll = ttk.Scrollbar(log_frame)
         log_scroll.pack(side=tk.RIGHT, fill=tk.Y)
 
-        self.log_text = tk.Text(log_frame, height=8, state=tk.DISABLED,
-                                 yscrollcommand=log_scroll.set)
+        self.log_text = tk.Text(
+            log_frame,
+            height=8,
+            state=tk.DISABLED,
+            yscrollcommand=log_scroll.set,
+            font=('Consolas', 9),
+            bg='#1f2937',
+            fg='#e5e7eb',
+            insertbackground='white',
+            relief='flat',
+            padx=10,
+            pady=10
+        )
         self.log_text.pack(fill=tk.BOTH, expand=True)
         log_scroll.config(command=self.log_text.yview)
 
@@ -214,11 +401,11 @@ class ConverterApp:
         """변환 모드 전환"""
         if self.batch_mode.get():
             self.single_frame.pack_forget()
-            self.batch_frame.pack(fill=tk.X, pady=(0, 10),
+            self.batch_frame.pack(fill=tk.X, pady=(0, 15),
                                    after=self.root.nametowidget(str(self.single_frame.master.winfo_children()[1])))
         else:
             self.batch_frame.pack_forget()
-            self.single_frame.pack(fill=tk.X, pady=(0, 10),
+            self.single_frame.pack(fill=tk.X, pady=(0, 15),
                                     after=self.root.nametowidget(str(self.batch_frame.master.winfo_children()[1])))
 
     def _browse_input(self):
@@ -272,15 +459,27 @@ class ConverterApp:
         # 미리보기 창
         preview_win = tk.Toplevel(self.root)
         preview_win.title(f"파일 목록 ({len(files)}개)")
-        preview_win.geometry("500x400")
+        preview_win.geometry("550x450")
+        preview_win.configure(bg=self.COLORS['bg'])
 
-        listbox_frame = ttk.Frame(preview_win, padding="10")
+        listbox_frame = ttk.Frame(preview_win, padding="15")
         listbox_frame.pack(fill=tk.BOTH, expand=True)
+
+        header_label = ttk.Label(listbox_frame, text=f"총 {len(files)}개 파일", style='Subtitle.TLabel')
+        header_label.pack(anchor=tk.W, pady=(0, 10))
 
         scrollbar = ttk.Scrollbar(listbox_frame)
         scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
 
-        listbox = tk.Listbox(listbox_frame, yscrollcommand=scrollbar.set)
+        listbox = tk.Listbox(
+            listbox_frame,
+            yscrollcommand=scrollbar.set,
+            font=('맑은 고딕', 9),
+            bg=self.COLORS['frame_bg'],
+            relief='solid',
+            borderwidth=1,
+            selectbackground=self.COLORS['primary']
+        )
         listbox.pack(fill=tk.BOTH, expand=True)
         scrollbar.config(command=listbox.yview)
 
@@ -288,7 +487,7 @@ class ConverterApp:
             rel_path = f.relative_to(input_folder) if f.is_relative_to(Path(input_folder)) else f
             listbox.insert(tk.END, str(rel_path))
 
-        ttk.Button(preview_win, text="닫기", command=preview_win.destroy).pack(pady=10)
+        ttk.Button(preview_win, text="닫기", command=preview_win.destroy).pack(pady=15)
 
     def _log(self, message):
         """로그 메시지 추가"""
@@ -315,8 +514,8 @@ class ConverterApp:
                     self.current_progress.start(10)
                 elif msg_type == 'file_done':
                     self.current_progress.stop()
-                    status = "성공" if msg['success'] else f"실패: {msg.get('error', '')}"
-                    self._log(f"[{status}] {msg['filename']}")
+                    status = "✓" if msg['success'] else f"✗ {msg.get('error', '')}"
+                    self._log(f"  [{status}] {msg['filename']}")
                 elif msg_type == 'progress':
                     self.total_progress_label.config(text=f"전체: {msg['current']}/{msg['total']}")
                     self.total_progress['value'] = (msg['current'] / msg['total']) * 100
@@ -351,7 +550,7 @@ class ConverterApp:
             return
 
         self._prepare_conversion()
-        self._log(f"변환 시작: {input_file}")
+        self._log(f"변환 시작: {Path(input_file).name}")
 
         # 백그라운드 스레드에서 실행
         thread = threading.Thread(target=self._convert_single, args=(input_file, output_file))
@@ -485,26 +684,30 @@ class ConverterApp:
         self.is_converting = False
         self.batch_result = batch_result
         self.current_progress.stop()
+        self.current_file_label.config(text="완료!")
         self.convert_btn.config(state=tk.NORMAL)
         self.cancel_btn.config(state=tk.DISABLED)
 
         summary = batch_result.get_summary()
 
-        self._log("-" * 40)
-        self._log(f"변환 완료!")
-        self._log(f"  성공: {summary['success']}개")
-        self._log(f"  실패: {summary['failed']}개")
-        self._log(f"  경고: {summary['warnings']}개")
+        self._log("─" * 45)
+        self._log(f"  변환 완료!")
+        self._log(f"  ✓ 성공: {summary['success']}개")
+        if summary['failed'] > 0:
+            self._log(f"  ✗ 실패: {summary['failed']}개")
+        if summary['warnings'] > 0:
+            self._log(f"  ⚠ 경고: {summary['warnings']}개")
+        self._log("─" * 45)
 
         if summary['failed'] > 0:
             self.export_btn.config(state=tk.NORMAL)
             messagebox.showwarning(
                 "완료",
-                f"변환 완료\n\n성공: {summary['success']}개\n실패: {summary['failed']}개\n\n자세한 내용은 로그를 확인하세요."
+                f"변환 완료\n\n✓ 성공: {summary['success']}개\n✗ 실패: {summary['failed']}개\n\n자세한 내용은 로그를 확인하세요."
             )
         else:
             self.export_btn.config(state=tk.NORMAL)
-            messagebox.showinfo("완료", f"모든 파일 변환 완료! ({summary['success']}개)")
+            messagebox.showinfo("완료", f"모든 파일 변환 완료!\n\n✓ 성공: {summary['success']}개")
 
     def _cancel_convert(self):
         """변환 취소"""
@@ -532,6 +735,14 @@ class ConverterApp:
 
     def run(self):
         """애플리케이션 실행"""
+        # 창을 화면 중앙에 배치
+        self.root.update_idletasks()
+        width = self.root.winfo_width()
+        height = self.root.winfo_height()
+        x = (self.root.winfo_screenwidth() // 2) - (width // 2)
+        y = (self.root.winfo_screenheight() // 2) - (height // 2)
+        self.root.geometry(f'{width}x{height}+{x}+{y}')
+
         self.root.mainloop()
 
 

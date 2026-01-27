@@ -4,25 +4,29 @@ Word 문서(.docx)를 웹북용 HTML로 변환하는 도구입니다.
 
 ## 특징
 
-- Python 설치 없이 EXE 파일로 즉시 실행
-- 간단한 GUI 제공
+- 간편한 GUI 제공
+- 단일 파일 / 배치(폴더) 변환 지원
 - 설정 파일(config.json)로 변환 규칙 커스터마이징
-- 이미지 자동 추출
+- 이미지 자동 추출 (문서별 독립 폴더)
 - 기술문서 특화 (WARNING/CAUTION/NOTE 박스 지원)
 
 ## 폴더 구조
 
 ```
 docx-to-html-converter/
-├── converter.exe          # 실행 파일
+├── src/
+│   ├── main.py            # 진입점 (실행 파일)
+│   ├── gui.py             # GUI 화면
+│   ├── converter.py       # 변환 로직
+│   └── utils.py           # 유틸리티 함수
 ├── config.json            # 변환 설정 (수정 가능)
 ├── templates/
-│   └── output-template.html   # 출력 템플릿 (수정 가능)
-├── output/                # 변환 결과 저장 폴더
-└── src/                   # 소스 코드
-    ├── main.py
-    ├── converter.py
-    └── gui.py
+│   └── output-template.html
+├── samples/               # 테스트용 샘플 문서
+├── packages/              # 오프라인 설치용 패키지
+├── requirements.txt       # 의존성 목록
+├── install.bat            # 설치 스크립트
+└── SETUP-GUIDE.md         # 설치 가이드
 ```
 
 ## 출력 구조
@@ -42,13 +46,34 @@ output/
 
 **규칙**: `{문서명}_images/` 형식으로 HTML 파일과 1:1 매핑됩니다.
 
+## 설치 방법
+
+### 온라인 환경
+
+```cmd
+pip install -r requirements.txt
+```
+
+### 오프라인/폐쇄망 환경
+
+`install.bat` 더블클릭 또는:
+
+```cmd
+pip install --no-index --find-links=./packages -r requirements.txt
+```
+
+자세한 내용은 `SETUP-GUIDE.md` 참고
+
 ## 사용 방법
 
-1. `converter.exe` 실행
-2. 변환할 Word 파일 선택
-3. 출력 위치 선택
-4. 옵션 설정
-5. [변환 실행] 클릭
+```cmd
+python src/main.py
+```
+
+1. 변환할 Word 파일 또는 폴더 선택
+2. 출력 위치 선택
+3. 옵션 설정 (이미지 추출, 빈 문단 제거)
+4. [변환 실행] 클릭
 
 ## 설정 파일 (config.json)
 
@@ -56,19 +81,13 @@ output/
 
 ### 주요 설정
 
-- `heading_styles`: 제목으로 인식할 Word 스타일 이름
+- `style_mapping.by_style`: Word 스타일명 → HTML 태그 매핑
+- `style_mapping.by_font_size`: 폰트 크기 → HTML 태그 매핑
 - `special_blocks`: WARNING/CAUTION/NOTE로 인식할 키워드
 - `options`: 변환 옵션
 
-## 빌드 방법
+## 요구사항
 
-```cmd
-pip install pyinstaller python-docx
-pyinstaller --onefile --windowed src/main.py -n converter
-```
-
-## 요구사항 (개발 환경)
-
-- Python 3.8+
+- Python 3.11+
 - python-docx
 - tkinter (Python 기본 포함)
