@@ -144,14 +144,14 @@ class DocxConverter:
                         # h1 시작 여부 확인
                         if tag_type == 'h1':
                             first_heading_found = True
-                        elif not first_heading_found and tag_type in ('h2', 'h3', 'p'):
+                        elif not first_heading_found and tag_type != 'h1':
                             result.add_warning("문서가 h1으로 시작하지 않습니다.")
 
                         html_parts.append(html)
                         result.stats['paragraphs'] += 1
 
-                        if tag_type in ('h1', 'h2', 'h3'):
-                            result.stats['headings'][tag_type] += 1
+                        if re.match(r'^h[1-6]$', tag_type):
+                            result.stats['headings'][tag_type] = result.stats['headings'].get(tag_type, 0) + 1
 
                 elif hasattr(element, 'rows'):
                     # 표 처리
@@ -245,6 +245,13 @@ class DocxConverter:
             style_name = paragraph.style.name
             tag_from_style = by_style.get(style_name)
 
+            # 매핑에 없으면 스타일명에서 숫자 자동 추출 (Heading 4, 제목 5 등)
+            if not tag_from_style:
+                match = re.match(r'^(?:Heading|제목)\s*(\d+)$', style_name, re.IGNORECASE)
+                if match:
+                    level = min(int(match.group(1)), 6)
+                    tag_from_style = f'h{level}'
+
         # 폰트 크기 기반 감지
         by_font_size = style_mapping.get('by_font_size', {})
         font_size = self._get_paragraph_font_size(paragraph)
@@ -307,17 +314,24 @@ class DocxConverter:
         # 제목 레벨 감지
         tag = self._detect_heading_level(paragraph)
 
+        # 정렬 속성 확인
+        align_attr = ''
+        if paragraph.alignment == WD_ALIGN_PARAGRAPH.CENTER:
+            align_attr = ' style="text-align: center;"'
+        elif paragraph.alignment == WD_ALIGN_PARAGRAPH.RIGHT:
+            align_attr = ' style="text-align: right;"'
+
         # 인라인 서식 처리
         inner_html = self._process_runs(paragraph.runs, image_map, options)
 
         if not inner_html.strip():
             # 이미지만 있는 경우
-            images_html = self._extract_inline_images(paragraph, image_map)
+            images_html = self._extract_inline_images(paragraph, image_map, align_attr)
             if images_html:
                 return images_html, 'image'
             return None, None
 
-        return f'<{tag}>{inner_html}</{tag}>', tag
+        return f'<{tag}{align_attr}>{inner_html}</{tag}>', tag
 
     def _process_runs(self, runs, image_map, options):
         """
@@ -500,7 +514,7 @@ class DocxConverter:
             pass
         return None
 
-    def _extract_inline_images(self, paragraph, image_map):
+    def _extract_inline_images(self, paragraph, image_map, align_attr=''):
         """문단에서 인라인 이미지 추출"""
         images = []
 
@@ -515,7 +529,7 @@ class DocxConverter:
             pass
 
         if images:
-            return '<p>' + ''.join(images) + '</p>'
+            return f'<p{align_attr}>' + ''.join(images) + '</p>'
         return None
 
     def _detect_special_block(self, text):
@@ -570,7 +584,7 @@ class DocxConverter:
                 'paragraphs': len(doc.paragraphs),
                 'tables': len(doc.tables),
                 'sections': len(doc.sections),
-                'headings': {'h1': 0, 'h2': 0, 'h3': 0},
+                'headings': {'h1': 0, 'h2': 0, 'h3': 0, 'h4': 0, 'h5': 0, 'h6': 0},
                 'images': 0,
                 'styles_used': set(),
                 'font_sizes_used': set(),
@@ -601,8 +615,8 @@ class DocxConverter:
 
                 # 제목 레벨 분석
                 tag = self._detect_heading_level(para)
-                if tag in ('h1', 'h2', 'h3'):
-                    analysis['headings'][tag] += 1
+                if re.match(r'^h[1-6]$', tag):
+                    analysis['headings'][tag] = analysis['headings'].get(tag, 0) + 1
 
                     if not first_content_found:
                         if tag == 'h1':

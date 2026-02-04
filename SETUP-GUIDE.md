@@ -10,7 +10,21 @@
 
 ---
 
-## 2. 의존성 설치
+## 2. 패키지 파일 복원 (중요!)
+
+메일 전송을 위해 `.whl` 확장자가 `.whl_`로 변경되어 있습니다.
+
+`packages` 폴더의 `restore.bat`을 더블클릭하여 복원하세요.
+
+또는 수동으로:
+```cmd
+cd packages
+ren *.whl_ *.whl
+```
+
+---
+
+## 3. 의존성 설치
 
 ### 방법 A: 배치 파일 사용 (권장)
 
@@ -29,7 +43,7 @@ pip install --no-index --find-links=./packages -r requirements.txt
 
 ---
 
-## 3. PyCharm에서 프로젝트 열기
+## 4. PyCharm에서 프로젝트 열기
 
 1. PyCharm 실행
 2. `File` → `Open` → 압축 해제한 폴더 선택
@@ -47,7 +61,7 @@ pip install --no-index --find-links=./packages -r requirements.txt
 
 ---
 
-## 4. 프로그램 실행
+## 5. 프로그램 실행
 
 ### GUI 모드 (권장)
 
@@ -67,7 +81,7 @@ python src/main.py
 
 ---
 
-## 5. 폴더 구조
+## 6. 폴더 구조
 
 ```
 docx-to-html-converter/
@@ -86,7 +100,7 @@ docx-to-html-converter/
 
 ---
 
-## 6. 주요 수정 포인트
+## 7. 주요 수정 포인트
 
 | 파일 | 역할 | 수정 시점 |
 |------|------|----------|
@@ -96,7 +110,7 @@ docx-to-html-converter/
 
 ---
 
-## 7. 출력 구조
+## 8. 출력 구조
 
 변환 시 이미지는 문서별 독립 폴더에 저장됩니다:
 
@@ -112,7 +126,7 @@ output/
 
 ---
 
-## 8. 문제 해결
+## 9. 문제 해결
 
 ### "pip를 찾을 수 없습니다"
 
