@@ -168,6 +168,41 @@ def find_docx_files(directory, recursive=True):
         return sorted(directory.glob('*.docx'))
 
 
+def find_pdf_files(directory, recursive=True):
+    """
+    디렉토리에서 모든 .pdf 파일 찾기
+
+    Args:
+        directory: 검색할 디렉토리
+        recursive: 하위 디렉토리 포함 여부
+
+    Returns:
+        list[Path]: .pdf 파일 경로 목록
+    """
+    directory = Path(directory)
+
+    if recursive:
+        return sorted(directory.rglob('*.pdf'))
+    else:
+        return sorted(directory.glob('*.pdf'))
+
+
+def find_convertible_files(directory, recursive=True):
+    """
+    디렉토리에서 변환 가능한 모든 파일 찾기 (.docx + .pdf)
+
+    Args:
+        directory: 검색할 디렉토리
+        recursive: 하위 디렉토리 포함 여부
+
+    Returns:
+        list[Path]: 변환 가능한 파일 경로 목록
+    """
+    docx_files = find_docx_files(directory, recursive)
+    pdf_files = find_pdf_files(directory, recursive)
+    return sorted(docx_files + pdf_files)
+
+
 def sanitize_filename(filename):
     """
     파일명에서 특수문자 제거
@@ -269,7 +304,7 @@ class ConversionResult:
         self.warnings = []
         self.stats = {
             'paragraphs': 0,
-            'headings': {'h1': 0, 'h2': 0, 'h3': 0},
+            'headings': {'h1': 0, 'h2': 0, 'h3': 0, 'h4': 0, 'h5': 0, 'h6': 0},
             'tables': 0,
             'images': 0,
             'lists': 0

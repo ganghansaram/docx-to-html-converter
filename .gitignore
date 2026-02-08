@@ -23,13 +23,20 @@ ENV/
 *.swp
 *.swo
 
+# Claude Code
+.claude/
+
 # Output
 output/*.html
 output/*_images/
 
+# Conversion artifacts
+*_report.txt
+
 # OS
 .DS_Store
 Thumbs.db
+nul
 
 # Temporary
 *.tmp

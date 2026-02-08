@@ -197,17 +197,6 @@ class DocxConverter:
         Yields:
             Paragraph 또는 Table 객체
         """
-        for element in doc.element.body:
-            if element.tag.endswith('p'):
-                yield doc.paragraphs[
-                    list(doc.element.body).index(element) -
-                    len([e for e in list(doc.element.body)[:list(doc.element.body).index(element)]
-                         if not e.tag.endswith('p')])
-                ] if False else None  # placeholder
-            elif element.tag.endswith('tbl'):
-                pass
-
-        # 단순화된 구현: 문단과 표를 순서대로 처리
         para_idx = 0
         table_idx = 0
 

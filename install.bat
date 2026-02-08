@@ -1,7 +1,7 @@
 @echo off
 chcp 65001 >nul
 echo ========================================
-echo   DOCX to HTML Converter 의존성 설치
+echo   Document to HTML Converter 의존성 설치
 echo ========================================
 echo.
 

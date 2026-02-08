@@ -41,6 +41,13 @@ cd C:\Projects\docx-to-html-converter
 pip install --no-index --find-links=./packages -r requirements.txt
 ```
 
+### 필요 패키지
+
+| 패키지 | 용도 |
+|--------|------|
+| python-docx | DOCX 문서 파싱 |
+| PyMuPDF | PDF 문서 파싱, 이미지/테이블 추출 |
+
 ---
 
 ## 4. PyCharm에서 프로젝트 열기
@@ -73,11 +80,26 @@ PyCharm에서 `src/main.py` 열고 실행 (Shift+F10)
 python src/main.py
 ```
 
+### CLI 모드
+
+```cmd
+# 단일 파일 변환
+python src/main.py document.docx
+python src/main.py document.pdf -o output/document.html
+
+# 폴더 배치 변환 (하위 폴더 포함)
+python src/main.py ./docs/ -r -o ./output/
+
+# 문서 구조 분석만 수행
+python src/main.py document.pdf --analyze
+```
+
 ### 테스트 변환
 
-1. GUI에서 `samples/sample_document.docx` 선택
+1. GUI에서 `samples/` 폴더의 .docx 또는 .pdf 파일 선택
 2. 출력 위치 선택
 3. [변환 실행] 클릭
+4. PDF의 경우 `_report.txt` 리포트에서 매칭 정확도 확인
 
 ---
 
@@ -86,16 +108,16 @@ python src/main.py
 ```
 docx-to-html-converter/
 ├── src/
-│   ├── main.py          # 진입점 (실행 파일)
-│   ├── gui.py           # GUI 화면
-│   ├── converter.py     # 변환 로직 (핵심)
-│   └── utils.py         # 유틸리티 함수
-├── config.json          # 변환 설정 (스타일 매핑 등)
-├── templates/           # HTML 템플릿
-├── samples/             # 테스트용 샘플 문서
-├── packages/            # 오프라인 설치용 패키지
-├── requirements.txt     # 의존성 목록
-└── install.bat          # 설치 스크립트
+│   ├── main.py            # 진입점 (GUI/CLI)
+│   ├── gui.py             # Tkinter GUI
+│   ├── converter.py       # DOCX 변환 로직
+│   ├── pdf_converter.py   # PDF 변환 로직 (TOC 기반)
+│   └── utils.py           # 유틸리티 함수
+├── config.json            # 변환 설정 (스타일 매핑, PDF 옵션)
+├── samples/               # 테스트용 샘플 문서
+├── packages/              # 오프라인 설치용 패키지
+├── requirements.txt       # 의존성 목록
+└── install.bat            # 설치 스크립트
 ```
 
 ---
@@ -104,8 +126,9 @@ docx-to-html-converter/
 
 | 파일 | 역할 | 수정 시점 |
 |------|------|----------|
-| `config.json` | 스타일→태그 매핑 규칙 | 새로운 Word 스타일 추가 시 |
-| `src/converter.py` | 변환 로직 | 변환 규칙 변경 시 |
+| `config.json` | 스타일→태그 매핑 규칙, PDF 설정 | 새로운 스타일 추가 시 |
+| `src/converter.py` | DOCX 변환 로직 | DOCX 변환 규칙 변경 시 |
+| `src/pdf_converter.py` | PDF 변환 로직 | PDF 변환 규칙 변경 시 |
 | `src/utils.py` | 공통 함수 | 유틸리티 추가 시 |
 
 ---
@@ -116,12 +139,25 @@ docx-to-html-converter/
 
 ```
 output/
-├── introduction.html
-├── introduction_images/
-│   └── image_xxx.png
-├── chapter01.html
-└── chapter01_images/
-    └── image_yyy.png
+├── document.html
+├── document_images/
+│   ├── image_abc123.png
+│   └── image_def456.jpg
+└── document_report.txt      ← PDF 변환 시 매칭 리포트
+```
+
+### PDF 매칭 리포트 예시
+
+```
+[변환 리포트] FY1-DoD-FLEX-4.pdf
+──────────────────────────────────────────────────
+✓ h1: "1. Overview" (p.4) → 매칭 (유사도: 1.00)
+✓ h2: "3.1 Aggregated Funding" (p.9) → 매칭 (유사도: 1.00)
+✗ h2: "3.3 Implementation Challenges" (p.13) → 매칭 실패
+   유사 후보: "3.3 Implementation Challenges and..." (p.13, 0.82)
+- [건너뜀] "Figure 1 – Breakdown..." (Figure/Table 참조)
+──────────────────────────────────────────────────
+섹션 제목: 10개 | 매칭 성공: 9 (90.0%) | 실패: 1
 ```
 
 ---
@@ -136,7 +172,7 @@ Python이 PATH에 등록되지 않은 경우:
 C:\Python311\python.exe -m pip install --no-index --find-links=./packages -r requirements.txt
 ```
 
-### "lxml 설치 실패"
+### "lxml 설치 실패" 또는 "PyMuPDF 설치 실패"
 
 Python 버전이 3.11.x인지 확인:
 
@@ -145,3 +181,9 @@ python --version
 ```
 
 다른 버전이면 해당 버전용 wheel 파일이 필요합니다.
+
+### PDF 변환 시 "TOC를 찾을 수 없습니다" 경고
+
+문서에 목차(Table of Contents) 페이지가 없는 경우 발생합니다.
+이 경우 모든 텍스트가 본문(`<p>`)으로 처리됩니다.
+`config.json`의 `pdf.toc_keywords`에 해당 문서의 목차 키워드를 추가하면 해결될 수 있습니다.

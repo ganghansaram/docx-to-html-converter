@@ -23,7 +23,7 @@ def main():
         print(f"오류: 필요한 패키지가 설치되지 않았습니다.")
         print(f"상세: {e}")
         print(f"\n다음 명령어로 패키지를 설치하세요:")
-        print(f"  pip install python-docx")
+        print(f"  pip install python-docx PyMuPDF")
         sys.exit(1)
 
 
@@ -32,7 +32,7 @@ def cli():
     import argparse
 
     parser = argparse.ArgumentParser(
-        description='DOCX to HTML Converter - Word 문서를 HTML로 변환'
+        description='Document to HTML Converter - Word/PDF 문서를 HTML로 변환'
     )
     parser.add_argument('input', nargs='?', help='입력 파일 또는 폴더')
     parser.add_argument('-o', '--output', help='출력 파일 또는 폴더')
@@ -55,19 +55,28 @@ def cli():
     # CLI 모드
     try:
         from converter import DocxConverter
-        from utils import find_docx_files, BatchResult
+        from pdf_converter import PdfConverter
+        from utils import find_convertible_files, BatchResult
         import json
 
-        converter = DocxConverter()
+        docx_converter = DocxConverter()
+        pdf_converter = PdfConverter()
         input_path = Path(args.input)
 
         options = {
             'extract_images': not args.no_images
         }
 
+        def get_converter(filepath):
+            """확장자에 따라 적절한 변환기 반환"""
+            if Path(filepath).suffix.lower() == '.pdf':
+                return pdf_converter
+            return docx_converter
+
         if args.analyze:
             # 분석 모드
             if input_path.is_file():
+                converter = get_converter(input_path)
                 result = converter.analyze(str(input_path))
                 print(json.dumps(result, indent=2, ensure_ascii=False))
             else:
@@ -76,6 +85,7 @@ def cli():
         elif input_path.is_file():
             # 단일 파일 변환
             output_path = args.output or str(input_path.with_suffix('.html'))
+            converter = get_converter(input_path)
             result = converter.convert(str(input_path), output_path, options)
 
             if result.success:
@@ -87,11 +97,11 @@ def cli():
                 sys.exit(1)
         elif input_path.is_dir():
             # 배치 변환
-            files = find_docx_files(str(input_path), args.recursive)
+            files = find_convertible_files(str(input_path), args.recursive)
             output_dir = Path(args.output) if args.output else input_path
 
             if not files:
-                print("변환할 .docx 파일이 없습니다.")
+                print("변환할 문서 파일이 없습니다. (.docx, .pdf)")
                 sys.exit(1)
 
             print(f"{len(files)}개 파일 변환 시작...")
@@ -101,6 +111,7 @@ def cli():
                 rel_path = f.relative_to(input_path)
                 output_path = output_dir / rel_path.with_suffix('.html')
 
+                converter = get_converter(f)
                 result = converter.convert(str(f), str(output_path), options)
                 batch_result.add(result)
 
@@ -115,7 +126,7 @@ def cli():
 
     except ImportError as e:
         print(f"오류: {e}")
-        print("pip install python-docx 를 실행하세요.")
+        print("pip install python-docx PyMuPDF 를 실행하세요.")
         sys.exit(1)
 
 

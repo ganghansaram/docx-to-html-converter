@@ -11,7 +11,8 @@ import threading
 import queue
 
 from converter import DocxConverter
-from utils import find_docx_files, BatchResult
+from pdf_converter import PdfConverter
+from utils import find_docx_files, find_convertible_files, BatchResult
 
 
 class ConverterApp:
@@ -32,7 +33,7 @@ class ConverterApp:
 
     def __init__(self):
         self.root = tk.Tk()
-        self.root.title("DOCX to HTML Converter")
+        self.root.title("Document to HTML Converter")
         self.root.geometry("750x700")
         self.root.resizable(True, True)
         self.root.minsize(650, 600)
@@ -43,6 +44,7 @@ class ConverterApp:
 
         # 변환기 인스턴스
         self.converter = DocxConverter()
+        self.pdf_converter = PdfConverter()
 
         # 변수 초기화
         self.input_path = tk.StringVar()
@@ -218,14 +220,14 @@ class ConverterApp:
 
         title_label = ttk.Label(
             header_frame,
-            text="DOCX → HTML Converter",
+            text="DOCX / PDF → HTML Converter",
             style='Title.TLabel'
         )
         title_label.pack(anchor=tk.W)
 
         subtitle_label = ttk.Label(
             header_frame,
-            text="Word 문서를 웹북용 HTML로 변환합니다",
+            text="Word/PDF 문서를 웹북용 HTML로 변환합니다",
             style='Subtitle.TLabel'
         )
         subtitle_label.pack(anchor=tk.W, pady=(5, 0))
@@ -411,8 +413,8 @@ class ConverterApp:
     def _browse_input(self):
         """입력 파일 선택 대화상자"""
         filepath = filedialog.askopenfilename(
-            title="Word 파일 선택",
-            filetypes=[("Word 문서", "*.docx"), ("모든 파일", "*.*")]
+            title="문서 파일 선택",
+            filetypes=[("지원 문서", "*.docx *.pdf"), ("Word 문서", "*.docx"), ("PDF 문서", "*.pdf"), ("모든 파일", "*.*")]
         )
         if filepath:
             self.input_path.set(filepath)
@@ -450,10 +452,10 @@ class ConverterApp:
             messagebox.showwarning("경고", "입력 폴더를 선택하세요.")
             return
 
-        files = find_docx_files(input_folder, self.include_subfolders.get())
+        files = find_convertible_files(input_folder, self.include_subfolders.get())
 
         if not files:
-            messagebox.showinfo("정보", "선택한 폴더에 .docx 파일이 없습니다.")
+            messagebox.showinfo("정보", "선택한 폴더에 변환 가능한 파일이 없습니다. (.docx, .pdf)")
             return
 
         # 미리보기 창
@@ -569,7 +571,10 @@ class ConverterApp:
             'filename': Path(input_file).name
         })
 
-        result = self.converter.convert(input_file, output_file, options)
+        if Path(input_file).suffix.lower() == '.pdf':
+            result = self.pdf_converter.convert(input_file, output_file, options)
+        else:
+            result = self.converter.convert(input_file, output_file, options)
 
         self.progress_queue.put({
             'type': 'file_done',
@@ -599,10 +604,10 @@ class ConverterApp:
             messagebox.showwarning("경고", "출력 폴더를 선택하세요.")
             return
 
-        files = find_docx_files(input_folder, self.include_subfolders.get())
+        files = find_convertible_files(input_folder, self.include_subfolders.get())
 
         if not files:
-            messagebox.showinfo("정보", "변환할 .docx 파일이 없습니다.")
+            messagebox.showinfo("정보", "변환할 문서 파일이 없습니다. (.docx, .pdf)")
             return
 
         self._prepare_conversion()
@@ -647,7 +652,10 @@ class ConverterApp:
                 'total': len(files)
             })
 
-            result = self.converter.convert(str(input_file), str(output_file), options)
+            if input_file.suffix.lower() == '.pdf':
+                result = self.pdf_converter.convert(str(input_file), str(output_file), options)
+            else:
+                result = self.converter.convert(str(input_file), str(output_file), options)
             batch_result.add(result)
 
             self.progress_queue.put({
